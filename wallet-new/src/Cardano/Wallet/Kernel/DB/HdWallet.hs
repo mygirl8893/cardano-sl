@@ -108,6 +108,7 @@ import           Serokell.Util (listJson)
 
 import qualified Pos.Core as Core
 import           Pos.Core.Chrono (NewestFirst (..))
+import           Pos.Core.NetworkMagic (NetworkMagic (..))
 import qualified Pos.Crypto as Core
 
 import           Cardano.Wallet.API.V1.Types (V1 (..))
@@ -203,7 +204,10 @@ deriveSafeCopy 1 'base ''HasSpendingPassword
 --
 -- TODO: This may well disappear as part of [CBR-325].
 eskToHdRootId :: Core.EncryptedSecretKey -> HdRootId
-eskToHdRootId = HdRootId . InDb . Core.makePubKeyAddressBoot . Core.encToPublic
+eskToHdRootId = HdRootId . InDb . (Core.makePubKeyAddressBoot fixedNM) . Core.encToPublic
+
+fixedNM :: NetworkMagic
+fixedNM = NetworkMainStage
 
 
 {-------------------------------------------------------------------------------

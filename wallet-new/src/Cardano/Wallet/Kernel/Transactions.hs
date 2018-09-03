@@ -38,6 +38,7 @@ import           Pos.Chain.Txp (Tx (..), TxAux (..), TxId, TxIn (..),
 import qualified Pos.Client.Txp.Util as CTxp
 import           Pos.Core (Address, Coin, TxFeePolicy (..), unsafeSubCoin)
 import qualified Pos.Core as Core
+import           Pos.Core.NetworkMagic (NetworkMagic (..))
 import           Pos.Crypto (EncryptedSecretKey, PassPhrase, RedeemSecretKey,
                      SafeSigner (..), ShouldCheckPassphrase (..), hash,
                      redeemToPublic)
@@ -458,7 +459,8 @@ mkSigner spendingPassword (Just esk) snapshot addr =
                                        . HD.hdAddressIdParent
                                        . HD.hdAccountIdIx
                                        . to HD.getHdAccountIx
-                res = Core.deriveLvl2KeyPair (Core.IsBootstrapEraAddr True)
+                res = Core.deriveLvl2KeyPair fixedNM
+                                             (Core.IsBootstrapEraAddr True)
                                              (ShouldCheckPassphrase False)
                                              spendingPassword
                                              esk
@@ -554,7 +556,7 @@ redeemAda w@ActiveWallet{..} accId pw rsk = runExceptT $ do
     return (taTx tx, meta)
   where
     redeemAddr :: Address
-    redeemAddr = Core.makeRedeemAddress $ redeemToPublic rsk
+    redeemAddr = Core.makeRedeemAddress fixedNM $ redeemToPublic rsk
 
     -- | Note: we use `getCreationTimestamp` provided by the `NodeStateAdaptor`
     --   to compute the createdAt timestamp for `TxMeta`
@@ -592,3 +594,6 @@ redeemAda w@ActiveWallet{..} accId pw rsk = runExceptT $ do
         isOutput (inp, TxOutAux (TxOut addr coin)) = do
             guard $ addr == redeemAddr
             return (inp, coin)
+
+fixedNM :: NetworkMagic
+fixedNM = NetworkMainStage

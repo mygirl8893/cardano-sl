@@ -26,6 +26,7 @@ import           Cardano.Wallet.API.V1.Types
 import           Cardano.Wallet.TypeLits (KnownSymbols (..))
 
 import           Pos.Chain.Update (SoftwareVersion)
+import           Pos.Core.NetworkMagic (NetworkMagic (..))
 import           Pos.Util.CompileInfo (CompileTimeInfo, ctiGitRevision)
 import           Pos.Util.Servant (CustomQueryFlag, LoggingApi)
 import           Pos.Wallet.Web.Swagger.Instances.Schema ()
@@ -389,7 +390,7 @@ $errors
       { Core.addrRoot =
           Crypto.unsafeAbstractHash ("asdfasdf" :: String)
       , Core.addrAttributes =
-          Core.mkAttributes $ Core.AddrAttributes Nothing Core.BootstrapEraDistr
+          Core.mkAttributes $ Core.AddrAttributes Nothing Core.BootstrapEraDistr fixedNM
       , Core.addrType =
           Core.ATPubKey
       }
@@ -1101,3 +1102,6 @@ api (compileInfo, curSoftwareVersion) walletAPI mkDescription = toSwagger wallet
   & paths %~ (DELETE, "/api/internal/reset-wallet-state") `setDescription` resetWalletStateDescription
   & paths %~ (POST,   "/api/v1/transactions/fees")        `setDescription` estimateFeesDescription
   & paths %~ (GET,    "/api/v1/addresses/{address}")      `setDescription` getAddressDescription
+
+fixedNM :: NetworkMagic
+fixedNM = NetworkMainStage
