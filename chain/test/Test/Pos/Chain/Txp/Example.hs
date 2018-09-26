@@ -30,13 +30,13 @@ import           Pos.Core.Attributes (mkAttributes)
 import           Pos.Core.Common (Coin (..), IsBootstrapEraAddr (..),
                      makePubKeyAddress)
 import           Pos.Core.Merkle (mkMerkleTree, mtRoot)
-import           Pos.Crypto (AbstractHash (..), Hash, ProtocolMagic (..),
-                     PublicKey (..), RedeemSignature, SignTag (..), hash,
+import           Pos.Crypto (AbstractHash (..), Hash, PublicKey (..),
+                     RedeemSignature, SignTag (..), hash,
                      redeemDeterministicKeyGen, redeemSign, sign)
 
 import           Test.Pos.Core.ExampleHelpers (examplePublicKey,
                      exampleSecretKey)
-import           Test.Pos.Crypto.Bi (getBytes)
+import           Test.Pos.Crypto.Bi (exampleProtocolMagic, getBytes)
 
 exampleTxAux :: TxAux
 exampleTxAux = TxAux tx exampleTxWitness
@@ -73,7 +73,7 @@ exampleTxProof = TxProof 32 mroot hashWit
     hashWit = hash $ [(V.fromList [(PkWitness examplePublicKey exampleTxSig)])]
 
 exampleTxSig :: TxSig
-exampleTxSig = sign (ProtocolMagic 0) SignForTestingOnly exampleSecretKey exampleTxSigData
+exampleTxSig = sign exampleProtocolMagic SignForTestingOnly exampleSecretKey exampleTxSigData
 
 exampleTxSigData :: TxSigData
 exampleTxSigData = TxSigData exampleHashTx
@@ -82,7 +82,7 @@ exampleTxWitness :: TxWitness
 exampleTxWitness = V.fromList [(PkWitness examplePublicKey exampleTxSig)]
 
 exampleRedeemSignature :: RedeemSignature TxSigData
-exampleRedeemSignature = redeemSign (ProtocolMagic 0) SignForTestingOnly rsk exampleTxSigData
+exampleRedeemSignature = redeemSign exampleProtocolMagic SignForTestingOnly rsk exampleTxSigData
     where
         rsk = fromJust (snd <$> redeemDeterministicKeyGen (getBytes 0 32))
 

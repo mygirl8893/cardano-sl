@@ -112,6 +112,7 @@ dev: &dev
     pendingTxResubmissionPeriod: 7 # seconds
     walletProductionApi: false
     walletTxCreationDisabled: false
+    explorerExtendedApi: false
 
   tls: &dev_tls
     ca:
@@ -133,6 +134,21 @@ dev: &dev
       - organization: "Input Output HK"
         commonName: "Daedalus Wallet"
         expiryDays: 365
+
+  wallet: &dev_wallet
+    # Configuration options for throttling the API. Items at the top level
+    # apply as a default setting to all requests. A 'null' value indicates that
+    # throttling is disabled.  To enable throttling, change the null value for
+    # the keys that are commented out below.
+    throttle: null
+    # throttle:
+    # # Number of requests per throttling period.
+    #   rate: 200
+    #   # Amount of microseconds in a throttling period.
+    #   period: 1_000_000
+    #   # The burst rate of concurrent requests. This allows end users to
+    #   # temporarily exceed the request rate.
+    #   burst: 30
 
 ##############################################################################
 ##                                                                          ##
@@ -311,6 +327,7 @@ mainnet_base: &mainnet_base
     pendingTxResubmissionPeriod: 7 # seconds
     walletProductionApi: true
     walletTxCreationDisabled: false
+    explorerExtendedApi: false
 
   tls: &mainnet_base_tls
     ca:
@@ -332,6 +349,9 @@ mainnet_base: &mainnet_base
       - organization: "Input Output HK"
         commonName: "Daedalus Wallet"
         expiryDays: 365
+
+  wallet: &mainnet_base_wallet
+    throttle: null
 
 ##############################################################################
 ##                                                                          ##

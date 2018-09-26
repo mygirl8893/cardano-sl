@@ -36,7 +36,8 @@ import           Pos.Chain.Update (ApplicationName (..), BlockVersion (..),
 import           Pos.Core (Coeff (..), CoinPortion (..), EpochIndex (..),
                      FlatSlotId, ScriptVersion, TxFeePolicy (..),
                      TxSizeLinear (..))
-import           Pos.Crypto (ProtocolMagic (..), hash)
+import           Pos.Crypto (ProtocolMagic (..), ProtocolMagicId (..),
+                     RequiresNetworkMagic (..), hash)
 
 import           Test.Pos.Core.ExampleHelpers (exampleAttributes,
                      examplePublicKey, exampleSafeSigner, getText)
@@ -208,7 +209,9 @@ exampleUpdateProposalToSign :: UpdateProposalToSign
     ( mkUpdateProposalWSign pm bv bvm sv hm ua ss
     , UpdateProposalToSign bv bvm sv hm ua )
   where
-    pm  = ProtocolMagic 0
+    pm  = ProtocolMagic { getProtocolMagicId = ProtocolMagicId 0
+                        , getRequiresNetworkMagic = NMMustBeNothing
+                        }
     bv  = exampleBlockVersion
     bvm = exampleBlockVersionModifier
     sv  = exampleSoftwareVersion
@@ -219,7 +222,9 @@ exampleUpdateProposalToSign :: UpdateProposalToSign
 exampleUpdateVote :: UpdateVote
 exampleUpdateVote = mkUpdateVoteSafe pm ss ui ar
   where
-    pm = ProtocolMagic 0
+    pm  = ProtocolMagic { getProtocolMagicId = ProtocolMagicId 0
+                        , getRequiresNetworkMagic = NMMustBeNothing
+                        }
     ss = exampleSafeSigner 0
     ui = exampleUpId
     ar = True
