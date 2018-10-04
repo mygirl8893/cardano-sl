@@ -162,7 +162,8 @@ import           Data.Swagger.Internal.TypeShape (GenericHasSimpleShape,
 import           Data.Text (Text, dropEnd, toLower)
 import qualified Data.Text as T
 import           Data.Version (Version)
-import           Formatting (bprint, build, fconst, int, sformat, stext, (%))
+import           Formatting (bprint, build, fconst, int, sformat, shown, stext,
+                     (%))
 import qualified Formatting.Buildable
 import           Generics.SOP.TH (deriveGeneric)
 import           GHC.Generics (Generic, Rep)
@@ -171,6 +172,7 @@ import           Node (NodeId (..))
 import           Serokell.Util (listJson)
 import qualified Serokell.Util.Base16 as Base16
 import           Servant
+import           Servant.API.ContentTypes (NoContent (..))
 import           Test.QuickCheck
 import           Test.QuickCheck.Gen (Gen (..))
 import qualified Test.QuickCheck.Gen as Gen
@@ -186,7 +188,6 @@ import           Cardano.Wallet.API.V1.Generic (jsendErrorGenericParseJSON,
                      jsendErrorGenericToJSON)
 import           Cardano.Wallet.API.V1.Swagger.Example (Example, example,
                      genExample)
-import           Cardano.Wallet.Orphans.Aeson ()
 import           Cardano.Wallet.Types.UtxoStatistics
 import           Cardano.Wallet.Util (mkJsonKey, showApiUtcTime)
 
@@ -195,7 +196,6 @@ import qualified Pos.Binary.Class as Bi
 import qualified Pos.Chain.Txp as Txp
 import qualified Pos.Chain.Update as Core
 import qualified Pos.Client.Txp.Util as Core
-import           Pos.Core (addressF)
 import qualified Pos.Core as Core
 import           Pos.Crypto (Hash, PublicKey (..), decodeHash, hashHexF)
 import qualified Pos.Crypto.Signing as Core
@@ -206,6 +206,7 @@ import           Pos.Infra.Util.LogSafe (BuildableSafeGen (..), SecureLog (..),
                      buildSafe, buildSafeList, buildSafeMaybe,
                      deriveSafeBuildable, plainOrSecureF)
 import           Pos.Util.Servant (Flaggable (..))
+import           Test.Pos.Chain.Update.Arbitrary ()
 import           Test.Pos.Core.Arbitrary ()
 
 -- | Declare generic schema, while documenting properties
@@ -321,7 +322,8 @@ instance Buildable (SecureLog a) => Buildable (SecureLog (V1 a)) where
 instance (Buildable a, Buildable b) => Buildable (a, b) where
     build (a, b) = bprint ("("%build%", "%build%")") a b
 
-
+instance Buildable Version where
+    build v = bprint shown v
 --
 -- Benign instances
 --
@@ -380,8 +382,17 @@ instance ToSchema (V1 Core.Coin) where
             & type_ .~ SwaggerNumber
             & maximum_ .~ Just (fromIntegral Core.maxCoinVal)
 
+instance ToHttpApiData Core.Coin where
+    toQueryParam = pretty . Core.coinToInteger
+
+instance FromHttpApiData Core.Coin where
+    parseUrlPiece p = do
+        c <- Core.Coin <$> parseQueryParam p
+        Core.checkCoin c
+        pure c
+
 instance ToJSON (V1 Core.Address) where
-    toJSON (V1 c) = String $ sformat addressF c
+    toJSON (V1 c) = String $ sformat Core.addressF c
 
 instance FromJSON (V1 Core.Address) where
     parseJSON (String a) = case Core.decodeTextAddress a of
@@ -3271,3 +3282,6 @@ instance HasDiagnostic WalletError where
             "msg"
         RequestThrottled{} ->
             "microsecondsUntilRetry"
+
+instance Arbitrary NoContent where
+    arbitrary = pure NoContent

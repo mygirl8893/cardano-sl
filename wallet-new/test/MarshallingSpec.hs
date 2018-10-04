@@ -43,7 +43,6 @@ import           Cardano.Wallet.API.V1.Types
 import           Cardano.Wallet.Kernel.DB.HdWallet (HdRoot)
 import           Cardano.Wallet.Kernel.DB.InDb (InDb (..))
 import qualified Cardano.Wallet.Kernel.Util.Strict as Strict
-import           Cardano.Wallet.Orphans ()
 import qualified Cardano.Wallet.Util as Util
 
 -- | Tests whether or not some instances (JSON, Bi, etc) roundtrips.
