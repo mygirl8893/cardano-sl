@@ -35,10 +35,9 @@ module Pos.Chain.Genesis.Config
 import           Universum
 
 import           Control.Exception (throwIO)
-import           Data.Aeson (FromJSON, ToJSON, Value (..), genericToEncoding,
-                     pairs, parseJSON, toEncoding, (.:))
-import           Data.Aeson.Encoding (pairStr)
-import           Data.Aeson.Options (defaultOptions)
+import           Data.Aeson (FromJSON, ToJSON, Value (..), pairs, parseJSON,
+                     toEncoding, (.:), (.=))
+import           Data.Aeson.Encoding.Internal (pair, pairStr)
 import           Data.Aeson.Types (typeMismatch)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -89,14 +88,16 @@ data StaticConfig
       -- !(Hash Raw) = Hash of canonically encoded 'GenesisData'.
     deriving (Eq, Show, Generic)
 
+-- toEncoding used to preserve order in JSON output.
 instance ToJSON StaticConfig where
     toEncoding (GCSrc gcsFile gcsHash) =
-        pairs . pairStr "src"
-            . pairs  $ pairStr "file"
-                (toEncoding gcsFile) <> pairStr "hash" (toEncoding gcsHash)
-
+        pairs $ mconcat [ "src" `pair`
+                              (pairs $ mconcat [ "file" .= gcsFile
+                                               , "hash" .= gcsHash
+                                               ])
+                        ]
     toEncoding (GCSpec value)          =
-        genericToEncoding defaultOptions (GCSpec value)
+        pairs $ pairStr "spec" (toEncoding value)
 
 instance FromJSON StaticConfig where
     parseJSON (Object o)
