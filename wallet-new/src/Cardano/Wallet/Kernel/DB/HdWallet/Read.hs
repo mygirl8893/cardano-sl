@@ -127,6 +127,17 @@ liftCP f accId =
       zoomHdAccountCurrent $
         asks f
 
+-- | Internal: lift a function on the current checkpoints. The difference with
+--   @liftCP@ is that we pass downstream a function that associates the current
+--   partial and historical checkpoint. This function is only used if the
+--   relevant account is under restoration.
+liftCPwithAssoc :: (a -> a -> a) -> (forall c. IsCheckpoint c => c -> a)
+       -> HdAccountId -> Query' UnknownHdAccount HdWallets a
+liftCPwithAssoc assoc f accId =
+    zoomHdAccountId identity accId $
+      zoomHdAccountCurrentAssoc assoc $
+        asks f
+
 currentUtxo :: HdAccountId -> Query' UnknownHdAccount HdWallets Utxo
 currentUtxo = liftCP (view cpUtxo)
 
@@ -134,7 +145,11 @@ currentAvailableUtxo :: HdAccountId -> Query' UnknownHdAccount HdWallets Utxo
 currentAvailableUtxo = liftCP cpAvailableUtxo
 
 currentTxSlotId :: TxId -> HdAccountId -> Query' UnknownHdAccount HdWallets (Maybe SlotId)
-currentTxSlotId txId = liftCP $ cpTxSlotId txId
+currentTxSlotId txId = liftCPwithAssoc associate (cpTxSlotId txId)
+  where
+    associate :: Maybe SlotId -> Maybe SlotId -> Maybe SlotId
+    associate (Just a) _ = (Just a)
+    associate Nothing  x = x
 
 currentTxIsPending :: TxId -> HdAccountId -> Query' UnknownHdAccount HdWallets Bool
 currentTxIsPending txId = liftCP $ cpTxIsPending txId

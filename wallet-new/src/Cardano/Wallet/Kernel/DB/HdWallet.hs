@@ -81,6 +81,7 @@ module Cardano.Wallet.Kernel.DB.HdWallet (
   , matchHdAccountState
   , zoomHdAccountCheckpoints
   , zoomHdAccountCurrent
+  , zoomHdAccountCurrentAssoc
   , matchHdAccountCheckpoints
     -- * Zoom variations that create on request
   , zoomOrCreateHdRoot
@@ -686,12 +687,35 @@ zoomHdAccountCheckpoints :: CanZoom f
                          -> f e HdAccount a
 zoomHdAccountCheckpoints upd = matchHdAccountCheckpoints upd upd
 
+-- | Zoom to the current checkpoints of the wallet. If the account is under
+--   restoration we associate the current historical and partial checkpoint.
+zoomHdAccountCheckpointsAssoc :: CanZoom f
+                              => (a -> a -> a)
+                              -> (   forall c. IsCheckpoint c
+                                  => f e (Checkpoints c) a )
+                              -> f e HdAccount a
+zoomHdAccountCheckpointsAssoc assoc upd =
+    matchHdAccountCheckpointsAssoc assoc upd upd
+
 -- | Zoom to the most recent checkpoint
 zoomHdAccountCurrent :: CanZoom f
                      => (forall c. IsCheckpoint c => f e c a)
                      -> f e HdAccount a
 zoomHdAccountCurrent upd = withZoomableConstraints $
     zoomHdAccountCheckpoints $
+      Z.wrap $ \cps -> do
+        let l :: Lens' (Checkpoints c) c
+            l = unCheckpoints . _Wrapped . SNE.head
+        second (\cp' -> cps & l .~ cp') $ Z.unwrap upd (cps ^. l)
+
+-- | Zoom to the most recent checkpoint. If the account is under
+--   restoration we associate the current historical and partial checkpoint.
+zoomHdAccountCurrentAssoc :: CanZoom f
+                          => (a -> a -> a)
+                          -> (forall c. IsCheckpoint c => f e c a)
+                          -> f e HdAccount a
+zoomHdAccountCurrentAssoc assoc upd = withZoomableConstraints $
+    zoomHdAccountCheckpointsAssoc assoc $
       Z.wrap $ \cps -> do
         let l :: Lens' (Checkpoints c) c
             l = unCheckpoints . _Wrapped . SNE.head
@@ -708,6 +732,20 @@ matchHdAccountCheckpoints updFull updPartial =
     matchHdAccountState
       (zoom hdUpToDateCheckpoints updFull)
       (zoom hdIncompleteCurrent   updPartial)
+
+-- | Like matchHdAccountCheckpoints, but if the account is under
+--   restoration we associate the current historical and partial checkpoint.
+matchHdAccountCheckpointsAssoc :: CanZoom f
+                               => (a -> a -> a)
+                               -> f e (Checkpoints Checkpoint)        a
+                               -> f e (Checkpoints PartialCheckpoint) a
+                               -> f e HdAccount a
+matchHdAccountCheckpointsAssoc assoc updFull updPartial =
+    matchHdAccountState
+      (zoom hdUpToDateCheckpoints updFull)
+      (withZoomableConstraints $
+          assoc <$> zoom hdIncompleteCurrent updPartial
+                <*> zoom hdIncompleteHistorical updFull)
 
 {-------------------------------------------------------------------------------
   Zoom to parts of the wallet, creating them if they don't exist
