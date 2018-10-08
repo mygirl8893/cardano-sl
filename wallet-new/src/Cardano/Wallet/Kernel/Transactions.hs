@@ -39,18 +39,6 @@ import           Test.QuickCheck (Arbitrary (..), oneof)
 import           Formatting (bprint, build, sformat, (%))
 import qualified Formatting.Buildable
 
-import           Pos.Chain.Txp (Tx (..), TxAttributes, TxAux (..), TxId,
-                     TxIn (..), TxInWitness (..), TxOut (..), TxOutAux (..),
-                     TxSigData (..), Utxo)
-import           Pos.Chain.Txp as Core (TxAttributes, TxAux, TxIn, TxOut,
-                     TxOutAux, toaOut, txOutAddress, txOutValue)
-import qualified Pos.Client.Txp.Util as CTxp
-import           Pos.Core (Address, Coin, TxFeePolicy (..), unsafeSubCoin)
-import qualified Pos.Core as Core
-import           Pos.Crypto (EncryptedSecretKey, PassPhrase, ProtocolMagic,
-                     PublicKey, RedeemSecretKey, SafeSigner (..),
-                     ShouldCheckPassphrase (..), Signature (..), hash,
-                     redeemToPublic)
 import           Cardano.Crypto.Wallet (DerivationIndex)
 import qualified Cardano.Wallet.Kernel.Addresses as Kernel
 import           Cardano.Wallet.Kernel.CoinSelection.FromGeneric
@@ -78,6 +66,18 @@ import           Cardano.Wallet.Kernel.Types (AccountId (..),
                      RawResolvedTx (..), WalletId (..))
 import           Cardano.Wallet.Kernel.Util.Core
 import           Cardano.Wallet.WalletLayer.Kernel.Conv (exceptT)
+import           Pos.Chain.Txp (Tx (..), TxAttributes, TxAux (..), TxId,
+                     TxIn (..), TxInWitness (..), TxOut (..), TxOutAux (..),
+                     TxSigData (..), Utxo)
+import           Pos.Chain.Txp as Core (TxAttributes, TxAux, TxIn, TxOut,
+                     TxOutAux, toaOut, txOutAddress, txOutValue)
+import qualified Pos.Client.Txp.Util as CTxp
+import           Pos.Core (Address, Coin, TxFeePolicy (..), unsafeSubCoin)
+import qualified Pos.Core as Core
+import           Pos.Crypto (EncryptedSecretKey, PassPhrase, ProtocolMagic,
+                     PublicKey, RedeemSecretKey, SafeSigner (..),
+                     ShouldCheckPassphrase (..), Signature (..), hash,
+                     redeemToPublic)
 import           UTxO.Util (shuffleNE)
 
 {-------------------------------------------------------------------------------
